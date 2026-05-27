@@ -38,20 +38,20 @@ export function AuthForm() {
           email: form.email,
           password: form.password,
           name: form.name,
-          callbackURL: '/dashboard',
+          callbackURL: '/resumes',
         });
         if (err) throw new Error(err.message);
         toast.success('Account created! Welcome to AlignIQ.');
-        router.push('/dashboard');
+        router.push('/resumes');
       } else {
         const { error: err } = await authClient.signIn.email({
           email: form.email,
           password: form.password,
-          callbackURL: '/dashboard',
+          callbackURL: '/resumes',
         });
         if (err) throw new Error(err.message);
-        toast.success('Welcome back!');
-        router.push('/dashboard');
+        toast.success('Signed in successfully');
+        router.push('/resumes');
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong';
@@ -66,7 +66,7 @@ export function AuthForm() {
     try {
       await authClient.signIn.social({
         provider,
-        callbackURL: '/dashboard',
+        callbackURL: '/resumes',
       });
     } catch {
       toast.error(`Failed to sign in with ${provider}`);

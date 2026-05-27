@@ -19,63 +19,58 @@ const statusConfig: Record<string, { icon: React.ElementType; label: string; }> 
   failed: { icon: XCircle, label: 'Failed' },
 };
 
+import { Badge } from '@/components/ui/badge';
+
 function ResumeCard({ resume: r }: { resume: Resume }) {
   const status = statusConfig[r.status] ?? statusConfig.pending;
   const StatusIcon = status.icon;
   const parsedData = r.parsedData as { experienceLevel?: string; technicalSkills?: string[] } | null;
 
   return (
-    <div className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 border-b border-border/50 transition-colors hover:bg-accent/20 px-3 -mx-3 rounded-md">
+    <div className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl border bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card transition-all hover:border-foreground/30 hover:shadow-sm">
       <div className="flex items-start gap-4">
-        <div className="mt-0.5 text-muted-foreground/40">
-          <FileText size={18} />
+        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground border">
+          <FileText size={20} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="truncate text-sm font-medium text-foreground tracking-tight">{r.fileName}</p>
-          <div className="mt-1 flex items-center flex-wrap gap-2.5">
-            <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
-              <StatusIcon size={12} weight={r.status === 'done' ? "fill" : "regular"} className={r.status === 'done' ? 'text-foreground' : ''} />
+          <p className="text-base font-semibold text-foreground tracking-tight truncate">{r.fileName}</p>
+          <div className="mt-2 flex items-center flex-wrap gap-2">
+            <Badge variant="secondary" className={cn("gap-1.5 font-medium", r.status === 'done' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}>
+              <StatusIcon size={14} weight={r.status === 'done' ? "fill" : "regular"} />
               {status.label}
-            </span>
+            </Badge>
             {parsedData?.experienceLevel && (
-              <>
-                <span className="text-muted-foreground/30 text-[10px]">•</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                  {parsedData.experienceLevel}
-                </span>
-              </>
+              <Badge variant="outline" className="text-muted-foreground uppercase text-[10px] tracking-wider bg-transparent">
+                {parsedData.experienceLevel}
+              </Badge>
             )}
             {parsedData?.technicalSkills && (
-              <>
-                <span className="text-muted-foreground/30 text-[10px]">•</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                  {parsedData.technicalSkills.length} SKILLS
-                </span>
-              </>
+              <Badge variant="outline" className="text-muted-foreground uppercase text-[10px] tracking-wider bg-transparent">
+                {parsedData.technicalSkills.length} SKILLS
+              </Badge>
             )}
-            <span className="text-muted-foreground/30 text-[10px]">•</span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+            <span className="text-muted-foreground text-xs pl-2 border-l border-border/50">
                {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
         </div>
       </div>
       
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-3 shrink-0 mt-4 sm:mt-0 bg-background/50 p-1.5 rounded-lg border">
         {r.score !== null && (
-          <div className="flex items-center gap-1.5 rounded-sm border border-border px-2 py-0.5 bg-accent/30">
-            <span className="text-xs font-mono font-medium text-foreground">
+          <div className="flex flex-col items-center justify-center px-3 border-r">
+            <span className="text-sm font-mono font-bold text-foreground leading-none">
               {r.score}%
             </span>
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">score</span>
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground mt-0.5">Match</span>
           </div>
         )}
         <Link href={`/resumes/${r.id}`}>
-          <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-            <ChartBar size={14} /> Analyze
+          <Button size="sm" variant="ghost" className="h-8 gap-2 hover:bg-accent hover:text-foreground">
+            <ChartBar size={16} /> <span className="hidden sm:inline">Analyze</span>
           </Button>
         </Link>
-        <div className="ml-1 pl-2 border-l border-border/50">
+        <div className="px-1">
           <DeleteResumeButton id={r.id} />
         </div>
       </div>

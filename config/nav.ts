@@ -1,9 +1,5 @@
 export const navItems = [
-  {
-    label: 'Dashboard',
-    href: '/dashboard',
-    icon: 'SquaresFour',
-  },
+
   {
     label: 'Resumes',
     href: '/resumes',
