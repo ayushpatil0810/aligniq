@@ -2,11 +2,17 @@
 
 import { useState, useMemo } from 'react';
 import { JobCard } from './JobCard';
-import { MagnifyingGlass, FunnelSimple } from '@phosphor-icons/react';
+import { MagnifyingGlass, Briefcase } from '@phosphor-icons/react';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { Briefcase } from '@phosphor-icons/react';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { JobDescription } from '@/db/schema';
 
 const CATEGORIES = ['all', 'frontend', 'backend', 'fullstack', 'mobile', 'devops', 'data', 'ai', 'design'] as const;
@@ -23,75 +29,89 @@ export function JobFilter({ jobs }: Props) {
 
   const filtered = useMemo(() => {
     return jobs.filter((j) => {
+      const q = query.trim().toLowerCase();
       const matchesQuery =
-        !query ||
-        j.title.toLowerCase().includes(query.toLowerCase()) ||
-        j.company.toLowerCase().includes(query.toLowerCase());
-      const matchesCategory = category === 'all' || j.category === category;
-      const matchesLevel = level === 'all' || j.level === level;
+        !q ||
+        (j.title?.toLowerCase() || '').includes(q) ||
+        (j.company?.toLowerCase() || '').includes(q);
+      
+      const matchesCategory = category === 'all' || (j.category?.toLowerCase() || '') === category;
+      const matchesLevel = level === 'all' || (j.level?.toLowerCase() || '') === level;
+      
       return matchesQuery && matchesCategory && matchesLevel;
     });
   }, [jobs, query, category, level]);
 
+  const hasActiveFilters = query !== '' || category !== 'all' || level !== 'all';
+
+  function resetFilters() {
+    setQuery('');
+    setCategory('all');
+    setLevel('all');
+  }
+
   return (
-    <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="space-y-6">
+      {/* Filters Bar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center p-1 border-b border-border/50 pb-4">
         <div className="relative flex-1">
           <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search roles, companies..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="h-9 pl-9 text-sm"
+            className="h-9 pl-9 text-sm shadow-none rounded-md bg-transparent border-border"
             id="job-search-input"
           />
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <FunnelSimple size={14} className="text-muted-foreground shrink-0" />
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategory(cat)}
-              className={cn(
-                'rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-all duration-150',
-                category === cat
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-accent hover:text-foreground',
-              )}
-              id={`filter-category-${cat}`}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="h-9 w-full sm:w-[140px] text-xs font-medium capitalize shadow-none border-border bg-transparent">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat} className="text-xs capitalize">
+                  {cat === 'all' ? 'All Categories' : cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={level} onValueChange={setLevel}>
+            <SelectTrigger className="h-9 w-full sm:w-[130px] text-xs font-medium capitalize shadow-none border-border bg-transparent">
+              <SelectValue placeholder="Level" />
+            </SelectTrigger>
+            <SelectContent>
+              {LEVELS.map((lvl) => (
+                <SelectItem key={lvl} value={lvl} className="text-xs capitalize">
+                  {lvl === 'all' ? 'All Levels' : lvl}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {hasActiveFilters && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={resetFilters}
+              className="h-9 text-xs text-muted-foreground hover:text-foreground px-2"
             >
-              {cat}
-            </button>
-          ))}
+              Reset
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {LEVELS.map((lvl) => (
-          <button
-            key={lvl}
-            onClick={() => setLevel(lvl)}
-            className={cn(
-              'rounded-md px-2.5 py-1 text-xs font-medium capitalize transition-all duration-150',
-              level === lvl
-                ? 'bg-primary/10 text-primary border border-primary/30'
-                : 'border border-border text-muted-foreground hover:border-primary/30 hover:text-foreground',
-            )}
-            id={`filter-level-${lvl}`}
-          >
-            {lvl}
-          </button>
-        ))}
-      </div>
-
-      {/* Results */}
+      {/* Results Header */}
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[11px] uppercase tracking-widest font-mono text-muted-foreground">
           {filtered.length} result{filtered.length !== 1 ? 's' : ''}
         </p>
       </div>
 
+      {/* Results Grid */}
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Briefcase size={20} />}
@@ -99,7 +119,7 @@ export function JobFilter({ jobs }: Props) {
           description="Try adjusting your search or filter criteria."
         />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((job) => (
             <JobCard key={job.id} job={job} />
           ))}

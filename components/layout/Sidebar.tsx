@@ -18,6 +18,16 @@ import { navItems, bottomNavItems } from '@/config/nav';
 import { authClient } from '@/lib/auth/auth-client';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from '@/components/ui/sidebar';
 
 const iconMap: Record<string, React.ElementType> = {
   SquaresFour,
@@ -43,31 +53,34 @@ function NavItem({
   const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <Link
-      href={href}
-      className={cn(
-        'group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150',
-        isActive
-          ? 'bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-      )}
-    >
-      {Icon && (
-        <Icon
-          size={18}
-          weight={isActive ? 'fill' : 'regular'}
-          className="shrink-0 transition-colors duration-150"
-        />
-      )}
-      <span>{label}</span>
-      {isActive && (
-        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-      )}
-    </Link>
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={isActive}
+        tooltip={label}
+        className={cn(
+          "h-9 gap-3 rounded-md px-3 text-sm transition-all duration-150",
+          isActive
+            ? "bg-accent/50 text-foreground font-medium"
+            : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
+        )}
+      >
+        <Link href={href}>
+          {Icon && (
+            <Icon
+              size={18}
+              weight={isActive ? 'fill' : 'regular'}
+              className="shrink-0"
+            />
+          )}
+          <span>{label}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ user }: { user: any }) {
   const router = useRouter();
 
   async function handleSignOut() {
@@ -81,43 +94,67 @@ export function Sidebar() {
     });
   }
 
-  return (
-    <aside className="flex h-full w-[220px] shrink-0 flex-col border-r border-border bg-sidebar">
-      {/* Logo */}
-      <div className="flex h-14 items-center gap-2.5 border-b border-border px-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-          <Lightning size={15} weight="fill" className="text-primary-foreground" />
-        </div>
-        <span className="text-[15px] font-semibold tracking-tight text-foreground">
-          AlignIQ
-        </span>
-      </div>
+  const initials = user?.name
+    ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() || 'U';
 
-      {/* Main nav */}
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3 scrollbar-hide">
-        <div className="mb-1">
-          <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-            Menu
-          </p>
+  return (
+    <ShadcnSidebar collapsible="icon" className="border-r border-border bg-sidebar group">
+      <SidebarHeader className="flex flex-col gap-4 p-4 pb-2 border-b border-border/50">
+        {/* Logo */}
+        <div className="flex h-8 items-center gap-2.5 px-2">
+          <span className="text-[15px] font-bold tracking-widest text-foreground uppercase truncate group-data-[collapsible=icon]:hidden">
+            AlignIQ.
+          </span>
+          <span className="text-[15px] font-bold tracking-widest text-foreground uppercase hidden group-data-[collapsible=icon]:block w-full text-center">
+            A.
+          </span>
+        </div>
+
+        {/* User Profile */}
+        <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-accent/30 transition-colors cursor-pointer group-data-[collapsible=icon]:justify-center">
+          <Avatar className="h-8 w-8 shrink-0 rounded-md">
+            <AvatarImage src={user?.image ?? undefined} alt={user?.name ?? 'User'} />
+            <AvatarFallback className="text-[11px] font-semibold bg-foreground/10 text-foreground rounded-md">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-sm font-semibold text-foreground leading-tight">
+              {user?.name || 'User'}
+            </span>
+            <span className="truncate text-[10px] text-muted-foreground uppercase tracking-wider">
+              {user?.email?.split('@')[0]}
+            </span>
+          </div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="px-3 py-4 gap-1 no-scrollbar">
+        <SidebarMenu className="gap-0.5">
           {navItems.map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
-        </div>
-      </nav>
+        </SidebarMenu>
+      </SidebarContent>
 
-      {/* Bottom nav */}
-      <div className="border-t border-border p-3">
-        {bottomNavItems.map((item) => (
-          <NavItem key={item.href} {...item} />
-        ))}
-        <button
-          onClick={handleSignOut}
-          className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-150 hover:bg-destructive/10 hover:text-destructive"
-        >
-          <SignOut size={18} className="shrink-0" />
-          <span>Sign out</span>
-        </button>
-      </div>
-    </aside>
+      <SidebarFooter className="px-3 pb-4">
+        <SidebarMenu className="gap-0.5">
+          {bottomNavItems.map((item) => (
+            <NavItem key={item.href} {...item} />
+          ))}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleSignOut}
+              tooltip="Sign out"
+              className="h-9 gap-3 rounded-md px-3 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150 cursor-pointer"
+            >
+              <SignOut size={18} className="shrink-0" />
+              <span>Sign out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </ShadcnSidebar>
   );
 }

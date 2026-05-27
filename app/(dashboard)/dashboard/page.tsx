@@ -7,9 +7,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 function ScoreBadge({ score }: { score: number | null }) {
-  if (score === null) return <span className="text-muted-foreground">—</span>;
-  const color = score >= 75 ? 'text-emerald-500' : score >= 50 ? 'text-amber-500' : 'text-red-500';
-  return <span className={cn('font-semibold tabular-nums', color)}>{score}</span>;
+  if (score === null) return <span className="text-muted-foreground text-xs font-mono">—</span>;
+  return <span className="text-xs font-mono font-medium text-foreground bg-accent px-1.5 py-0.5 rounded-sm">{score}%</span>;
 }
 
 function StatCard({
@@ -26,18 +25,16 @@ function StatCard({
   href?: string;
 }) {
   const content = (
-    <div className="group rounded-xl border border-border bg-card p-5 transition-all duration-150 hover:border-primary/30 hover:bg-card/80 cursor-pointer">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-          <Icon size={16} weight="duotone" className="text-primary" />
-        </div>
+    <div className="group rounded-md border border-border/60 bg-transparent p-5 transition-colors hover:border-foreground/20 cursor-pointer">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
+        <Icon size={14} className="text-muted-foreground" />
       </div>
-      <p className="text-3xl font-semibold tracking-tight text-foreground">{value}</p>
-      {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
+      <p className="text-3xl font-semibold tracking-tight text-foreground mb-1">{value}</p>
+      {sub && <p className="text-[11px] text-muted-foreground/60">{sub}</p>}
     </div>
   );
-  return href ? <Link href={href}>{content}</Link> : content;
+  return href ? <Link href={href} className="block">{content}</Link> : content;
 }
 
 export default async function DashboardPage() {
@@ -51,21 +48,22 @@ export default async function DashboardPage() {
 
   const { totalResumes, totalAnalyses, latestRoadmap } = stats;
 
-  const readinessMap: Record<string, { label: string; color: string }> = {
-    'strong': { label: 'Strong', color: 'text-emerald-500 bg-emerald-500/10' },
-    'ready': { label: 'Ready', color: 'text-blue-500 bg-blue-500/10' },
-    'developing': { label: 'Developing', color: 'text-amber-500 bg-amber-500/10' },
-    'not-ready': { label: 'Not Ready', color: 'text-red-500 bg-red-500/10' },
+  const readinessMap: Record<string, { label: string; className: string }> = {
+    'strong': { label: 'Strong', className: 'text-foreground border-foreground' },
+    'ready': { label: 'Ready', className: 'text-muted-foreground border-border' },
+    'developing': { label: 'Developing', className: 'text-muted-foreground border-border border-dashed' },
+    'not-ready': { label: 'Not Ready', className: 'text-muted-foreground/50 border-border/50' },
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-12 animate-fade-in max-w-5xl mx-auto pb-10">
       <PageHeader
-        title={`Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, ${session.user.name?.split(' ')[0] ?? 'there'} 👋`}
-        description="Here's your placement readiness overview."
+        title={`Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, ${session.user.name?.split(' ')[0] ?? 'there'}.`}
+        description="Here is your placement readiness overview."
+        className="mb-8"
         action={
           <Link href="/resumes">
-            <Button size="sm" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" id="btn-upload-resume">
+            <Button size="sm" className="gap-2 text-xs font-medium bg-foreground text-background hover:bg-foreground/90 rounded-sm" id="btn-upload-resume">
               <Lightning size={14} weight="fill" />
               Upload Resume
             </Button>
@@ -108,68 +106,69 @@ export default async function DashboardPage() {
 
       {/* Recent Analyses */}
       <div>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-foreground">Recent Analyses</h2>
-          <Link href="/analysis" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-            View all <ArrowRight size={12} />
+        <div className="mb-6 flex items-center justify-between border-b border-border/50 pb-2">
+          <h2 className="text-sm font-semibold text-foreground tracking-tight">Recent Analyses</h2>
+          <Link href="/analysis" className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">
+            View all <ArrowRight size={10} />
           </Link>
         </div>
 
         {analysesWithJobs.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-10 text-center">
-            <ChartBar size={32} className="mx-auto mb-3 text-muted-foreground/40" />
+          <div className="rounded-md border border-dashed border-border/60 p-12 text-center">
+            <ChartBar size={24} className="mx-auto mb-4 text-muted-foreground/30" />
             <p className="text-sm font-medium text-foreground">No analyses yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground max-w-xs mx-auto">
               Upload a resume and match it against a job description to see results here.
             </p>
-            <Link href="/resumes" className="mt-4 inline-block">
-              <Button size="sm" variant="outline" className="gap-2" id="btn-start-analysis">
+            <Link href="/resumes" className="mt-6 inline-block">
+              <Button size="sm" variant="outline" className="gap-2 text-xs rounded-sm" id="btn-start-analysis">
                 Get started <ArrowRight size={12} />
               </Button>
             </Link>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-6">
             {analysesWithJobs.map((a) => {
               const readiness = a.readinessLevel ? readinessMap[a.readinessLevel] : null;
               return (
-                <Link
-                  key={a.id}
-                  href={`/analysis/${a.id}`}
-                  className="group flex items-center justify-between rounded-xl border border-border bg-card p-4 transition-all duration-150 hover:border-primary/30 hover:bg-accent/30"
-                  id={`analysis-${a.id}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <ChartBar size={16} weight="duotone" className="text-primary" />
+                <div key={a.id} className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-0.5">
+                      <ChartBar size={16} className="text-muted-foreground/50" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">
+                      <Link href={`/analysis/${a.id}`} className="text-sm font-medium text-foreground hover:underline decoration-border underline-offset-4">
                         {a.job?.title ?? 'Unknown Role'}
-                        {a.job?.company && (
-                          <span className="ml-1.5 text-muted-foreground font-normal">at {a.job.company}</span>
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
+                      </Link>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {a.job?.company ? `at ${a.job.company} · ` : ''}
                         {new Date(a.createdAt).toLocaleDateString('en-US', {
                           month: 'short', day: 'numeric', year: 'numeric',
                         })}
                       </p>
+                      
+                      <div className="mt-3 flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest bg-accent/50 px-1.5 py-0.5 rounded-sm">
+                          Match Score
+                        </span>
+                        <ScoreBadge score={a.matchScore} />
+                        {readiness && (
+                          <span className={cn('text-[10px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-sm border', readiness.className)}>
+                            {readiness.label}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {readiness && (
-                      <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-medium', readiness.color)}>
-                        {readiness.label}
-                      </span>
-                    )}
-                    <div className="flex items-center gap-1">
-                      <ScoreBadge score={a.matchScore} />
-                      <span className="text-xs text-muted-foreground">%</span>
-                    </div>
-                    <ArrowRight size={14} className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                  
+                  <div className="hidden sm:flex shrink-0">
+                    <Link href={`/analysis/${a.id}`}>
+                      <Button variant="ghost" size="sm" className="text-xs gap-1.5 text-muted-foreground hover:text-foreground">
+                        View Analysis <ArrowRight size={12} />
+                      </Button>
+                    </Link>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -178,26 +177,26 @@ export default async function DashboardPage() {
 
       {/* Quick Actions */}
       {totalResumes === 0 && (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <Lightning size={20} weight="duotone" className="text-primary" />
+        <div className="mt-12 rounded-md border border-border bg-transparent p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent">
+              <Lightning size={20} className="text-foreground" />
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-foreground">Get started with AlignIQ</h3>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+              <h3 className="text-base font-semibold text-foreground tracking-tight">Get started with AlignIQ</h3>
+              <p className="mt-1 text-sm text-muted-foreground leading-relaxed max-w-xl">
                 Upload your resume to get an AI-powered analysis of your placement readiness.
                 AlignIQ will identify skill gaps, score your fit, and generate a personalized learning roadmap.
               </p>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="/resumes">
-                  <Button size="sm" className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90" id="btn-quickstart-upload">
-                    <FileText size={13} weight="fill" /> Upload Resume
+                  <Button size="sm" className="gap-2 bg-foreground text-background hover:bg-foreground/90 rounded-sm shadow-none" id="btn-quickstart-upload">
+                    <FileText size={14} /> Upload Resume
                   </Button>
                 </Link>
                 <Link href="/jobs">
-                  <Button size="sm" variant="outline" className="gap-1.5" id="btn-quickstart-browse">
-                    <Briefcase size={13} /> Browse Jobs
+                  <Button size="sm" variant="outline" className="gap-2 rounded-sm shadow-none" id="btn-quickstart-browse">
+                    <Briefcase size={14} /> Browse Jobs
                   </Button>
                 </Link>
               </div>
