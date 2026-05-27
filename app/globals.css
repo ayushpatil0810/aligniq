@@ -123,16 +123,19 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv11", "ss01";
     font-variation-settings: "opsz" 32;
   }
+
   html {
     @apply font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
   html {
     scroll-behavior: smooth;
   }
@@ -140,14 +143,23 @@
 
 /* ─── Custom Utilities ───────────────────────────────────── */
 @layer utilities {
-  .score-ring-high { @apply text-emerald-500; }
-  .score-ring-mid { @apply text-amber-500; }
-  .score-ring-low { @apply text-red-500; }
+  .score-ring-high {
+    @apply text-emerald-500;
+  }
+
+  .score-ring-mid {
+    @apply text-amber-500;
+  }
+
+  .score-ring-low {
+    @apply text-red-500;
+  }
 
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -155,8 +167,16 @@
   .animate-fade-in {
     animation: fadeIn 0.4s ease-out;
   }
+
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

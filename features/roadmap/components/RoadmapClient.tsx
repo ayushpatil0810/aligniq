@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckSquare, Square, Clock, BookOpen, ArrowRight, Trophy } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import type { RoadmapWeek } from '@/ai/schemas/roadmap';
@@ -12,18 +12,20 @@ interface Props {
   initialProgress: number;
 }
 
-function WeekCard({ week, isActive, isCompleted }: { week: RoadmapWeek; isActive: boolean; isCompleted: boolean }) {
+function WeekCard({
+  week,
+  isActive,
+  isCompleted,
+  completedTopics,
+  onToggleTopic,
+}: {
+  week: RoadmapWeek;
+  isActive: boolean;
+  isCompleted: boolean;
+  completedTopics: Set<string>;
+  onToggleTopic: (topicKey: string) => void;
+}) {
   const [expanded, setExpanded] = useState(isActive);
-  const [completedTopics, setCompletedTopics] = useState<Set<string>>(new Set());
-
-  function toggleTopic(name: string) {
-    setCompletedTopics((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
-  }
 
   return (
     <div
@@ -80,16 +82,16 @@ function WeekCard({ week, isActive, isCompleted }: { week: RoadmapWeek; isActive
                 <div key={i} className="rounded-lg border border-border bg-background/50 p-3">
                   <div className="flex items-center justify-between mb-2">
                     <button
-                      onClick={() => toggleTopic(topic.name)}
+                      onClick={() => onToggleTopic(`${week.week}-${i}`)}
                       className="flex items-center gap-2 text-left cursor-pointer"
                       id={`topic-${week.week}-${i}`}
                     >
-                      {completedTopics.has(topic.name) ? (
+                      {completedTopics.has(`${week.week}-${i}`) ? (
                         <CheckSquare size={16} weight="fill" className="shrink-0 text-emerald-500" />
                       ) : (
                         <Square size={16} className="shrink-0 text-muted-foreground" />
                       )}
-                      <span className={cn('text-sm font-medium', completedTopics.has(topic.name) && 'line-through text-muted-foreground')}>
+                      <span className={cn('text-sm font-medium', completedTopics.has(`${week.week}-${i}`) && 'line-through text-muted-foreground')}>
                         {topic.name}
                       </span>
                     </button>
@@ -131,8 +133,79 @@ function WeekCard({ week, isActive, isCompleted }: { week: RoadmapWeek; isActive
 
 export function RoadmapClient({ roadmapId, weeks, initialWeek, initialProgress }: Props) {
   const [currentWeek] = useState(initialWeek);
+  const [completedTopics, setCompletedTopics] = useState<Set<string>>(new Set());
+  const [hasHydrated, setHasHydrated] = useState(false);
 
-  const totalHours = weeks.reduce((sum, w) => sum + w.topics.reduce((s, t) => s + t.estimatedHours, 0), 0);
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(`roadmap-progress:${roadmapId}`);
+      setCompletedTopics(stored ? new Set<string>(JSON.parse(stored)) : new Set());
+    } catch {
+      setCompletedTopics(new Set());
+    }
+    setHasHydrated(true);
+  }, [roadmapId]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(`roadmap-progress:${roadmapId}`, JSON.stringify(Array.from(completedTopics)));
+    } catch {
+      // Ignore storage errors (private mode or quota).
+    }
+  }, [completedTopics, roadmapId]);
+
+  const totalHours = useMemo(
+    () => weeks.reduce((sum, w) => sum + w.topics.reduce((s, t) => s + t.estimatedHours, 0), 0),
+    [weeks],
+  );
+
+  const totalTopics = useMemo(
+    () => weeks.reduce((sum, w) => sum + w.topics.length, 0),
+    [weeks],
+  );
+
+  const computedProgress = totalTopics > 0
+    ? Math.round((completedTopics.size / totalTopics) * 100)
+    : initialProgress;
+  const progress = hasHydrated ? computedProgress : initialProgress;
+
+  const [lastSyncedProgress, setLastSyncedProgress] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (progress === lastSyncedProgress) return;
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      try {
+        const res = await fetch('/api/roadmap/progress', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roadmapId, progress }),
+          signal: controller.signal,
+        });
+
+        if (res.ok) {
+          setLastSyncedProgress(progress);
+        }
+      } catch {
+        // Ignore network errors; the next toggle will retry.
+      }
+    }, 400);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeout);
+    };
+  }, [progress, roadmapId, lastSyncedProgress]);
+
+  function toggleTopic(topicKey: string) {
+    setCompletedTopics((prev) => {
+      const next = new Set(prev);
+      if (next.has(topicKey)) next.delete(topicKey);
+      else next.add(topicKey);
+      return next;
+    });
+  }
 
   return (
     <div className="space-y-4">
@@ -154,10 +227,10 @@ export function RoadmapClient({ roadmapId, weeks, initialWeek, initialProgress }
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-medium text-foreground">Overall Progress</span>
-          <span className="text-sm font-semibold text-primary">{initialProgress}%</span>
+          <span className="text-sm font-semibold text-primary">{progress}%</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-border">
-          <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${initialProgress}%` }} />
+          <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
@@ -169,6 +242,8 @@ export function RoadmapClient({ roadmapId, weeks, initialWeek, initialProgress }
             week={week}
             isActive={week.week === currentWeek}
             isCompleted={week.week < currentWeek}
+            completedTopics={completedTopics}
+            onToggleTopic={toggleTopic}
           />
         ))}
       </div>
