@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { requireAuth } from '@/server/auth';
 import { db } from '@/server/db';
 import { resume, jobDescription, analysisResult } from '@/db/schema';
 import { analyzeMatch } from '@/ai/pipelines/match-analysis';
+import { ParsedResumeSchema } from '@/ai/schemas/resume-analysis';
 import { eq, and, desc } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
@@ -38,6 +40,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Resume is not fully processed yet' }, { status: 422 });
     }
 
+    // Validate parsedData using Zod instead of type casting
+    const parsedResult = ParsedResumeSchema.safeParse(resumeRecord.parsedData);
+    if (!parsedResult.success) {
+      return NextResponse.json({ error: 'Resume data is malformed' }, { status: 500 });
+    }
+
     // Fetch job
     const [jobRecord] = await db
       .select()
@@ -58,28 +66,35 @@ export async function POST(req: NextRequest) {
       status: 'processing',
     });
 
-    // Run AI analysis
-    const analysis = await analyzeMatch({
-      parsedResume: resumeRecord.parsedData as Parameters<typeof analyzeMatch>[0]['parsedResume'],
-      jobDescription: jobRecord,
+    // Run AI analysis in the background
+    after(async () => {
+      try {
+        const analysis = await analyzeMatch({
+          parsedResume: parsedResult.data,
+          jobDescription: jobRecord,
+        });
+
+        // Update with results
+        await db
+          .update(analysisResult)
+          .set({
+            matchScore: analysis.matchScore,
+            skillsMatched: analysis.skillsMatched,
+            skillsMissing: analysis.skillsMissing,
+            strengths: analysis.strengths,
+            weaknesses: analysis.weaknesses,
+            insights: analysis.insights,
+            readinessLevel: analysis.readinessLevel,
+            status: 'done',
+          })
+          .where(eq(analysisResult.id, analysisId));
+      } catch (err) {
+        console.error('Background analysis error:', err);
+        await db.update(analysisResult).set({ status: 'failed' }).where(eq(analysisResult.id, analysisId));
+      }
     });
 
-    // Update with results
-    await db
-      .update(analysisResult)
-      .set({
-        matchScore: analysis.matchScore,
-        skillsMatched: analysis.skillsMatched,
-        skillsMissing: analysis.skillsMissing,
-        strengths: analysis.strengths,
-        weaknesses: analysis.weaknesses,
-        insights: analysis.insights,
-        readinessLevel: analysis.readinessLevel,
-        status: 'done',
-      })
-      .where(eq(analysisResult.id, analysisId));
-
-    return NextResponse.json({ id: analysisId, matchScore: analysis.matchScore });
+    return NextResponse.json({ id: analysisId, status: 'processing' }, { status: 202 });
   } catch (err) {
     console.error('Analysis route error:', err);
     const message = err instanceof Error ? err.message : 'Analysis failed';

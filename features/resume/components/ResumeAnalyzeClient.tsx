@@ -43,11 +43,30 @@ export function ResumeAnalyzeClient({ resumeId, jobs }: Props) {
         resumeId,
         jobId: selectedJobId,
       });
-      toast.success(`Analysis complete! Match score: ${data.matchScore}%`);
-      router.push(`/analysis/${data.id}`);
+
+      let currentAnalysis = data;
+      
+      if (currentAnalysis.status === 'processing') {
+        toast.info('AI is analyzing the match... this may take up to a minute.');
+
+        while (currentAnalysis.status === 'processing') {
+           await new Promise(resolve => setTimeout(resolve, 3000));
+           const { data: pollData } = await axios.get(`/api/analysis/${currentAnalysis.id}`);
+           currentAnalysis = pollData.analysis;
+        }
+      }
+
+      if (currentAnalysis.status === 'failed') {
+         throw new Error('AI match analysis failed. Please try again.');
+      }
+
+      toast.success(`Analysis complete! Match score: ${currentAnalysis.matchScore}%`);
+      router.push(`/analysis/${currentAnalysis.id}`);
     } catch (err) {
       const message = axios.isAxiosError(err)
         ? err.response?.data?.error ?? 'Analysis failed'
+        : err instanceof Error
+        ? err.message
         : 'Analysis failed';
       toast.error(message);
     } finally {
