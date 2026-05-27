@@ -1,9 +1,7 @@
 import { requireAuth } from '@/server/auth';
-import { db } from '@/server/db';
-import { resume, analysisResult, roadmap, jobDescription } from '@/db/schema';
-import { eq, desc, count, avg } from 'drizzle-orm';
+import { getDashboardStats, getRecentAnalysesWithJobs } from '@/data-access/dashboard';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { FileText, ChartBar, Lightning, ArrowRight, Target, Path } from '@phosphor-icons/react/dist/ssr';
+import { FileText, ChartBar, Lightning, ArrowRight, Target, Path, Briefcase } from '@phosphor-icons/react/dist/ssr';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -46,49 +44,12 @@ export default async function DashboardPage() {
   const session = await requireAuth();
   const userId = session.user.id;
 
-  const [
-    resumeCount,
-    analysisCount,
-    recentAnalyses,
-    activeRoadmap,
-  ] = await Promise.all([
-    db.select({ count: count() }).from(resume).where(eq(resume.userId, userId)),
-    db.select({ count: count() }).from(analysisResult).where(eq(analysisResult.userId, userId)),
-    db
-      .select({
-        id: analysisResult.id,
-        matchScore: analysisResult.matchScore,
-        readinessLevel: analysisResult.readinessLevel,
-        status: analysisResult.status,
-        createdAt: analysisResult.createdAt,
-        jobId: analysisResult.jobId,
-      })
-      .from(analysisResult)
-      .where(eq(analysisResult.userId, userId))
-      .orderBy(desc(analysisResult.createdAt))
-      .limit(5),
-    db
-      .select()
-      .from(roadmap)
-      .where(eq(roadmap.userId, userId))
-      .orderBy(desc(roadmap.createdAt))
-      .limit(1),
+  const [stats, analysesWithJobs] = await Promise.all([
+    getDashboardStats(userId),
+    getRecentAnalysesWithJobs(userId)
   ]);
 
-  const totalResumes = resumeCount[0]?.count ?? 0;
-  const totalAnalyses = analysisCount[0]?.count ?? 0;
-  const latestRoadmap = activeRoadmap[0];
-
-  // Fetch job titles for recent analyses
-  const analysesWithJobs = await Promise.all(
-    recentAnalyses.map(async (a) => {
-      const [job] = await db
-        .select({ title: jobDescription.title, company: jobDescription.company })
-        .from(jobDescription)
-        .where(eq(jobDescription.id, a.jobId));
-      return { ...a, job };
-    }),
-  );
+  const { totalResumes, totalAnalyses, latestRoadmap } = stats;
 
   const readinessMap: Record<string, { label: string; color: string }> = {
     'strong': { label: 'Strong', color: 'text-emerald-500 bg-emerald-500/10' },
@@ -130,8 +91,8 @@ export default async function DashboardPage() {
         />
         <StatCard
           label="Avg Match Score"
-          value={recentAnalyses.length > 0
-            ? `${Math.round(recentAnalyses.reduce((a, r) => a + (r.matchScore ?? 0), 0) / recentAnalyses.length)}%`
+          value={analysesWithJobs.length > 0
+            ? `${Math.round(analysesWithJobs.reduce((a, r) => a + (r.matchScore ?? 0), 0) / analysesWithJobs.length)}%`
             : '—'}
           icon={Target}
           sub="Across all analyses"
@@ -245,20 +206,5 @@ export default async function DashboardPage() {
         </div>
       )}
     </div>
-  );
-}
-
-function Briefcase({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 256 256"
-      className={className}
-      fill="currentColor"
-    >
-      <path d="M216,56H176V48a24,24,0,0,0-24-24H104A24,24,0,0,0,80,48v8H40A16,16,0,0,0,24,72V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V72A16,16,0,0,0,216,56ZM96,48a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96ZM216,200H40V72H216V200Z" />
-    </svg>
   );
 }

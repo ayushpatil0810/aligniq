@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/server/auth';
-import { db } from '@/server/db';
-import { analysisResult } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { getAnalysisById } from '@/data-access/analysis';
 
 export const runtime = 'nodejs';
 
@@ -15,10 +13,7 @@ export async function GET(
     const session = await requireAuth();
     const { id } = await params;
 
-    const [analysis] = await db
-      .select()
-      .from(analysisResult)
-      .where(and(eq(analysisResult.id, id), eq(analysisResult.userId, session.user.id)));
+    const analysis = await getAnalysisById(session.user.id, id);
 
     if (!analysis) {
       return NextResponse.json({ error: 'Analysis not found' }, { status: 404 });

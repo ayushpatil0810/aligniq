@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { after } from 'next/server';
 import { requireAuth } from '@/server/auth';
-import { db } from '@/server/db';
-import { resume } from '@/db/schema';
 import { uploadResume } from '@/lib/supabase/storage';
 import { extractTextFromPDF } from '@/lib/pdf/extractor';
 import { parseResume } from '@/ai/pipelines/parse-resume';
-import { eq } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
+import { createResumeRecord, updateResumeStatus } from '@/data-access/resume';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -40,9 +37,7 @@ export async function POST(req: NextRequest) {
     const { path, url } = await uploadResume(userId, file);
 
     // Create DB record
-    const resumeId = nanoid();
-    await db.insert(resume).values({
-      id: resumeId,
+    const resumeId = await createResumeRecord({
       userId,
       fileName: file.name,
       fileUrl: url,
@@ -57,7 +52,7 @@ export async function POST(req: NextRequest) {
         rawText = await extractTextFromPDF(buffer);
       } catch (err) {
         console.error('PDF extraction error:', err);
-        await db.update(resume).set({ status: 'failed' }).where(eq(resume.id, resumeId));
+        await updateResumeStatus(resumeId, { status: 'failed' });
         return;
       }
 
@@ -74,15 +69,12 @@ export async function POST(req: NextRequest) {
       }
 
       // Update record with parsed data
-      await db
-        .update(resume)
-        .set({
-          rawText,
-          parsedData,
-          score,
-          status: 'done',
-        })
-        .where(eq(resume.id, resumeId));
+      await updateResumeStatus(resumeId, {
+        rawText,
+        parsedData,
+        score,
+        status: 'done',
+      });
     });
 
     return NextResponse.json({

@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { after } from 'next/server';
 import { requireAuth } from '@/server/auth';
-import { db } from '@/server/db';
-import { resume, jobDescription, analysisResult } from '@/db/schema';
 import { analyzeMatch } from '@/ai/pipelines/match-analysis';
 import { ParsedResumeSchema } from '@/ai/schemas/resume-analysis';
-import { eq, and, desc } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
 import { z } from 'zod';
+import { getResumeById } from '@/data-access/resume';
+import { getAnalyses, getJobById, createAnalysisRecord, updateAnalysisResult } from '@/data-access/analysis';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -27,10 +25,7 @@ export async function POST(req: NextRequest) {
     const { resumeId, jobId } = RequestSchema.parse(body);
 
     // Verify resume belongs to user
-    const [resumeRecord] = await db
-      .select()
-      .from(resume)
-      .where(and(eq(resume.id, resumeId), eq(resume.userId, userId)));
+    const resumeRecord = await getResumeById(userId, resumeId);
 
     if (!resumeRecord) {
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
@@ -47,19 +42,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch job
-    const [jobRecord] = await db
-      .select()
-      .from(jobDescription)
-      .where(eq(jobDescription.id, jobId));
+    const jobRecord = await getJobById(jobId);
 
     if (!jobRecord) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
     // Create analysis record
-    const analysisId = nanoid();
-    await db.insert(analysisResult).values({
-      id: analysisId,
+    const analysisId = await createAnalysisRecord({
       userId,
       resumeId,
       jobId,
@@ -75,22 +65,19 @@ export async function POST(req: NextRequest) {
         });
 
         // Update with results
-        await db
-          .update(analysisResult)
-          .set({
-            matchScore: analysis.matchScore,
-            skillsMatched: analysis.skillsMatched,
-            skillsMissing: analysis.skillsMissing,
-            strengths: analysis.strengths,
-            weaknesses: analysis.weaknesses,
-            insights: analysis.insights,
-            readinessLevel: analysis.readinessLevel,
-            status: 'done',
-          })
-          .where(eq(analysisResult.id, analysisId));
+        await updateAnalysisResult(analysisId, {
+          matchScore: analysis.matchScore,
+          skillsMatched: analysis.skillsMatched,
+          skillsMissing: analysis.skillsMissing,
+          strengths: analysis.strengths,
+          weaknesses: analysis.weaknesses,
+          insights: analysis.insights,
+          readinessLevel: analysis.readinessLevel,
+          status: 'done',
+        });
       } catch (err) {
         console.error('Background analysis error:', err);
-        await db.update(analysisResult).set({ status: 'failed' }).where(eq(analysisResult.id, analysisId));
+        await updateAnalysisResult(analysisId, { status: 'failed' });
       }
     });
 
@@ -108,20 +95,7 @@ export async function GET() {
   try {
     const session = await requireAuth();
 
-    const analyses = await db
-      .select({
-        id: analysisResult.id,
-        resumeId: analysisResult.resumeId,
-        jobId: analysisResult.jobId,
-        matchScore: analysisResult.matchScore,
-        readinessLevel: analysisResult.readinessLevel,
-        status: analysisResult.status,
-        createdAt: analysisResult.createdAt,
-      })
-      .from(analysisResult)
-      .where(eq(analysisResult.userId, session.user.id))
-      .orderBy(desc(analysisResult.createdAt))
-      .limit(20);
+    const analyses = await getAnalyses(session.user.id);
 
     return NextResponse.json({ analyses });
   } catch (err) {

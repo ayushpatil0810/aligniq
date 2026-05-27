@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/server/auth';
-import { db } from '@/server/db';
-import { resume } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { getResumeById, deleteResumeRecord } from '@/data-access/resume';
 import { deleteResume } from '@/lib/supabase/storage';
 
 export const runtime = 'nodejs';
@@ -16,10 +14,7 @@ export async function GET(
     const session = await requireAuth();
     const { id } = await params;
 
-    const [found] = await db
-      .select()
-      .from(resume)
-      .where(and(eq(resume.id, id), eq(resume.userId, session.user.id)));
+    const found = await getResumeById(session.user.id, id);
 
     if (!found) {
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
@@ -41,10 +36,7 @@ export async function DELETE(
     const session = await requireAuth();
     const { id } = await params;
 
-    const [found] = await db
-      .select()
-      .from(resume)
-      .where(and(eq(resume.id, id), eq(resume.userId, session.user.id)));
+    const found = await getResumeById(session.user.id, id);
 
     if (!found) {
       return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
@@ -54,7 +46,7 @@ export async function DELETE(
     await deleteResume(found.storagePath);
 
     // Delete DB record (cascades to analyses)
-    await db.delete(resume).where(eq(resume.id, id));
+    await deleteResumeRecord(session.user.id, id);
 
     return NextResponse.json({ success: true });
   } catch (err) {
