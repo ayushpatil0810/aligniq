@@ -7,9 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Lightning, GithubLogo, GoogleLogo, Eye, EyeSlash } from '@phosphor-icons/react';
-import { cn } from '@/lib/utils';
+import { Lightning, Eye, EyeSlash } from '@phosphor-icons/react';
 
 type Mode = 'signin' | 'signup';
 
@@ -18,7 +16,6 @@ export function AuthForm() {
 	const [mode, setMode] = useState<Mode>('signin');
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isSocialLoading, setIsSocialLoading] = useState<'github' | 'google' | null>(null);
 	const [form, setForm] = useState({ name: '', email: '', password: '' });
 	const [error, setError] = useState('');
 
@@ -61,19 +58,6 @@ export function AuthForm() {
 		}
 	}
 
-	async function handleSocial(provider: 'github' | 'google') {
-		setIsSocialLoading(provider);
-		try {
-			await authClient.signIn.social({
-				provider,
-				callbackURL: '/resumes',
-			});
-		} catch {
-			toast.error(`Failed to sign in with ${provider}`);
-			setIsSocialLoading(null);
-		}
-	}
-
 	return (
 		<div className="w-full max-w-[380px] animate-fade-in">
 			{/* Header */}
@@ -89,44 +73,6 @@ export function AuthForm() {
 						? 'Sign in to your AlignIQ account'
 						: 'Start analyzing your placement readiness'}
 				</p>
-			</div>
-
-			{/* Social Auth */}
-			<div className="grid grid-cols-2 gap-2.5">
-				<Button
-					variant="outline"
-					className="gap-2 border-border text-foreground hover:bg-accent"
-					onClick={() => handleSocial('github')}
-					disabled={!!isSocialLoading}
-					id="btn-github-auth"
-				>
-					{isSocialLoading === 'github' ? (
-						<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-					) : (
-						<GithubLogo size={16} weight="fill" />
-					)}
-					GitHub
-				</Button>
-				<Button
-					variant="outline"
-					className="gap-2 border-border text-foreground hover:bg-accent"
-					onClick={() => handleSocial('google')}
-					disabled={!!isSocialLoading}
-					id="btn-google-auth"
-				>
-					{isSocialLoading === 'google' ? (
-						<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-					) : (
-						<GoogleLogo size={16} weight="bold" />
-					)}
-					Google
-				</Button>
-			</div>
-
-			<div className="my-5 flex items-center gap-3">
-				<Separator className="flex-1" />
-				<span className="text-xs text-muted-foreground">or continue with email</span>
-				<Separator className="flex-1" />
 			</div>
 
 			{/* Email Form */}

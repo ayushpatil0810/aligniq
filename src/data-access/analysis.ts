@@ -50,11 +50,7 @@ export async function getJobById(id: string) {
 	return job ?? null;
 }
 
-export async function createCustomJob(
-	userId: string,
-	title: string,
-	description: string
-) {
+export async function createCustomJob(userId: string, title: string, description: string) {
 	const id = nanoid();
 	await db.insert(jobDescription).values({
 		id,
