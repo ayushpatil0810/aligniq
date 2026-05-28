@@ -28,7 +28,7 @@ export const navItems = [
 
 export const bottomNavItems = [
 	{
-		label: 'Settings',
+		label: 'AI Settings',
 		href: '/settings',
 		icon: 'Gear',
 	},

@@ -2,13 +2,13 @@ import { requireAuth } from '@/server/auth';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { User, EnvelopeSimple, ShieldCheck } from '@phosphor-icons/react/dist/ssr';
 
-export default async function SettingsPage() {
+export default async function AccountPage() {
 	const session = await requireAuth();
 	const user = session.user;
 
 	return (
 		<div className="space-y-6 animate-fade-in max-w-xl">
-			<PageHeader title="Settings" description="Manage your account preferences." />
+			<PageHeader title="Account" description="Manage your account preferences." />
 
 			<div className="rounded-xl border border-border bg-card p-6 space-y-5">
 				<h2 className="text-sm font-semibold text-foreground flex items-center gap-2">

@@ -11,14 +11,6 @@ export function SiteHeader() {
 			</div>
 			<div className="flex items-center gap-2">
 				<ThemeToggle />
-				<Button
-					variant="ghost"
-					size="icon"
-					className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent/50"
-					aria-label="Notifications"
-				>
-					<Bell size={16} weight="regular" />
-				</Button>
 			</div>
 		</header>
 	);

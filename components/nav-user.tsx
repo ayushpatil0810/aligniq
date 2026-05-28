@@ -25,6 +25,7 @@ import {
 } from '@phosphor-icons/react';
 import { authClient } from '@/lib/auth/auth-client';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 
 export function NavUser({
@@ -76,7 +77,6 @@ export function NavUser({
 								<span className="truncate font-medium">{user.name}</span>
 								<span className="truncate text-xs text-muted-foreground">{user.email}</span>
 							</div>
-							<DotsThreeVerticalIcon className="ml-auto size-4" />
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
@@ -99,17 +99,11 @@ export function NavUser({
 						</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>
-							<DropdownMenuItem>
-								<UserCircleIcon className="mr-2" />
-								Account
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<CreditCardIcon className="mr-2" />
-								Billing
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<BellIcon className="mr-2" />
-								Notifications
+							<DropdownMenuItem asChild>
+								<Link href="/account" className="flex items-center w-full cursor-pointer">
+									<UserCircleIcon className="mr-2" />
+									Account
+								</Link>
 							</DropdownMenuItem>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
