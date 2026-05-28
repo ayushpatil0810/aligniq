@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckSquare, Square, Clock, BookOpen, ArrowRight, Trophy } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
+import { getAiHeaders } from '@/lib/utils/ai-config';
 import type { RoadmapWeek } from '@/ai/schemas/roadmap';
 
 interface Props {
@@ -226,7 +227,10 @@ export function RoadmapClient({ roadmapId, weeks, initialWeek, initialProgress }
 			try {
 				const res = await fetch('/api/roadmap/progress', {
 					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
+					headers: {
+						'Content-Type': 'application/json',
+						...getAiHeaders(),
+					},
 					body: JSON.stringify({ roadmapId, progress }),
 					signal: controller.signal,
 				});

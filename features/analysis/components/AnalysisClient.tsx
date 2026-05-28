@@ -25,6 +25,8 @@ import {
 	Tooltip,
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import { getAiHeaders } from '@/lib/utils/ai-config';
+import { useAiCheck } from '@/lib/hooks/useAiCheck';
 import type { AnalysisResult } from '@/db/schema';
 
 interface Props {
@@ -111,6 +113,7 @@ export function AnalysisClient({
 	const router = useRouter();
 	const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false);
 	const [isGeneratingInterview, setIsGeneratingInterview] = useState(false);
+	const { checkAiKey, AiKeyModal } = useAiCheck();
 
 	const skillsMatched =
 		(analysis.skillsMatched as Array<{
@@ -153,22 +156,33 @@ export function AnalysisClient({
 	];
 
 	async function generateRoadmap() {
+		if (!checkAiKey()) return;
 		setIsGeneratingRoadmap(true);
 		try {
-			const { data } = await axios.post('/api/roadmap', { analysisId: analysis.id });
-			toast.success('Roadmap generated! Redirecting...');
+			const { data } = await axios.post(
+				'/api/roadmap',
+				{ analysisId: analysis.id },
+				{ headers: getAiHeaders() }
+			);
+			toast.success('Roadmap generated successfully');
 			router.push(`/roadmap/${data.id}`);
-		} catch {
-			toast.error('Failed to generate roadmap');
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Generation failed';
+			toast.error(message);
 		} finally {
 			setIsGeneratingRoadmap(false);
 		}
 	}
 
 	async function generateInterview() {
+		if (!checkAiKey()) return;
 		setIsGeneratingInterview(true);
 		try {
-			const { data } = await axios.post('/api/interview', { analysisId: analysis.id });
+			const { data } = await axios.post(
+				'/api/interview',
+				{ analysisId: analysis.id },
+				{ headers: getAiHeaders() }
+			);
 			toast.success('Interview questions ready!');
 			router.push(`/interview/${data.id}`);
 		} catch {
@@ -427,6 +441,7 @@ export function AnalysisClient({
 					)}
 				</div>
 			</div>
+			<AiKeyModal />
 		</div>
 	);
 }

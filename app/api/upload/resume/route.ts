@@ -43,7 +43,15 @@ export async function POST(req: NextRequest) {
 			fileUrl: url,
 			storagePath: path,
 			status: 'processing',
+			id: ''
 		});
+
+		// Extract AI settings from headers
+		const aiConfig = {
+			apiKey: req.headers.get('x-ai-api-key') || null,
+			baseUrl: req.headers.get('x-ai-base-url') || null,
+			modelName: req.headers.get('x-ai-model-name') || null,
+		};
 
 		// Run extraction and parsing in the background
 		after(async () => {
@@ -60,7 +68,7 @@ export async function POST(req: NextRequest) {
 			let parsedData = null;
 			let score = null;
 			try {
-				const parsed = await parseResume(rawText);
+				const parsed = await parseResume(rawText, aiConfig);
 				parsedData = parsed;
 				score = parsed.score;
 			} catch (err) {

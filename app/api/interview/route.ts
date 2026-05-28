@@ -41,10 +41,18 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: 'Required data not found' }, { status: 404 });
 		}
 
+		// Extract AI settings from headers
+		const aiConfig = {
+			apiKey: req.headers.get('x-ai-api-key') || null,
+			baseUrl: req.headers.get('x-ai-base-url') || null,
+			modelName: req.headers.get('x-ai-model-name') || null,
+		};
+
 		const interviewSet = await generateInterviewQuestions({
 			parsedResume: resumeRecord.parsedData as Parameters<
 				typeof generateInterviewQuestions
 			>[0]['parsedResume'],
+			aiConfig,
 			analysis: {
 				matchScore: analysis.matchScore ?? 0,
 				skillsMatched:
