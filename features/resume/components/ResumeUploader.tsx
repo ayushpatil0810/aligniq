@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useResumeUpload } from '../hooks/useResumeUpload';
+import { useAiCheck } from '@/lib/hooks/useAiCheck';
 import { UploadSimple, File as FileIcon, Check, X } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,8 +16,10 @@ export function ResumeUploader({ onSuccess }: ResumeUploaderProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [uploadedFile, setUploadedFile] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const { checkAiKey, AiKeyModal } = useAiCheck();
 
 	async function processFile(file: File) {
+		if (!checkAiKey()) return;
 		const result = await upload(file);
 		if (result) {
 			setUploadedFile(file.name);
@@ -121,6 +124,7 @@ export function ResumeUploader({ onSuccess }: ResumeUploaderProps) {
 					</div>
 				</>
 			)}
+			<AiKeyModal />
 		</div>
 	);
 }

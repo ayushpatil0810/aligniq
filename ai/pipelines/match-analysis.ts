@@ -1,9 +1,8 @@
-import { openai } from '@/ai/client';
+import { createOpenAIClient, getProviderCompatibleOptions, extractJsonFromText, type AiConfigOptions } from '@/ai/client';
 import env from '@/lib/utils/env';
 import { MatchAnalysisSchema, type MatchAnalysis } from '@/ai/schemas/match-analysis';
 import type { ParsedResume } from '@/ai/schemas/resume-analysis';
 import type { JobDescription } from '@/db/schema';
-import { zodResponseFormat } from 'openai/helpers/zod';
 
 const SYSTEM_PROMPT = `You are a senior technical hiring manager and AI-powered placement engine.
 
@@ -19,12 +18,15 @@ Critical principles:
 interface MatchInput {
 	parsedResume: ParsedResume;
 	jobDescription: JobDescription;
+	aiConfig?: AiConfigOptions & { modelName?: string | null };
 }
 
 export async function analyzeMatch({
 	parsedResume,
 	jobDescription,
+	aiConfig,
 }: MatchInput): Promise<MatchAnalysis> {
+	const openai = createOpenAIClient(aiConfig);
 	const resumeSummary = JSON.stringify({
 		technicalSkills: parsedResume.technicalSkills,
 		softSkills: parsedResume.softSkills,
@@ -42,10 +44,12 @@ export async function analyzeMatch({
 		descriptionExcerpt: jobDescription.description.slice(0, 3000),
 	});
 
+	const { response_format, systemPromptSuffix } = getProviderCompatibleOptions(MatchAnalysisSchema, 'match_analysis', aiConfig);
+
 	const response = await openai.chat.completions.create({
-		model: env.AI_MODEL_NAME,
+		model: aiConfig?.modelName || env.AI_MODEL_NAME,
 		messages: [
-			{ role: 'system', content: SYSTEM_PROMPT },
+			{ role: 'system', content: SYSTEM_PROMPT + systemPromptSuffix },
 			{
 				role: 'user',
 				content: `Perform a comprehensive semantic match analysis.
@@ -59,7 +63,7 @@ ${jobSummary}
 Provide a detailed, honest analysis. Focus on contextual relevance, not keyword overlap.`,
 			},
 		],
-		response_format: zodResponseFormat(MatchAnalysisSchema, 'match_analysis'),
+		response_format,
 		temperature: 0.2,
 	});
 
@@ -69,8 +73,9 @@ Provide a detailed, honest analysis. Focus on contextual relevance, not keyword 
 	}
 
 	try {
-		return MatchAnalysisSchema.parse(JSON.parse(content));
-	} catch {
+		const jsonString = extractJsonFromText(content);
+		return MatchAnalysisSchema.parse(JSON.parse(jsonString));
+	} catch (err) {
 		throw new Error('Match analysis failed — AI returned invalid structure');
 	}
 }

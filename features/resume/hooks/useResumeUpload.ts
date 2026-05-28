@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getAiHeaders } from '@/lib/utils/ai-config';
 
 interface UploadedResume {
 	id: string;
@@ -42,7 +43,10 @@ export function useResumeUpload(): UseResumeUploadReturn {
 			formData.append('file', file);
 
 			const { data } = await axios.post<UploadedResume>('/api/upload/resume', formData, {
-				headers: { 'Content-Type': 'multipart/form-data' },
+				headers: {
+					'Content-Type': 'multipart/form-data',
+					...getAiHeaders(),
+				},
 				onUploadProgress: (event) => {
 					if (event.total) {
 						setProgress(Math.round((event.loaded * 100) / event.total));

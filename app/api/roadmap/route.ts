@@ -41,8 +41,16 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: 'Job not found' }, { status: 404 });
 		}
 
+		// Extract AI settings from headers
+		const aiConfig = {
+			apiKey: req.headers.get('x-ai-api-key') || null,
+			baseUrl: req.headers.get('x-ai-base-url') || null,
+			modelName: req.headers.get('x-ai-model-name') || null,
+		};
+
 		// Generate roadmap
 		const roadmapData = await generateRoadmap({
+			aiConfig,
 			analysis: {
 				matchScore: analysis.matchScore ?? 0,
 				skillsMatched:
