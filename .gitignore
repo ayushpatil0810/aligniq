@@ -46,3 +46,4 @@ next-env.d.ts
 .github
 AGENTS.md
 skills-lock.json
+.vercel

@@ -45,7 +45,7 @@ export function AppSidebar({
 			title: item.label,
 			url: item.href,
 			icon: Icon ? <Icon /> : undefined,
-			isActive: item.href === '/dashboard', // will be dynamically handled in NavMain
+			isActive: false, // handled in NavMain
 		};
 	});
 

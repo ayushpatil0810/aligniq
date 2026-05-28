@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
-import { jobDescription } from '../db/schema/job-schema';
+import { jobDescription } from '../src/db/schema/job-schema';
 import { nanoid } from 'nanoid';
 
 const db = drizzle(neon(process.env.DATABASE_URL!));

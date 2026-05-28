@@ -28,7 +28,11 @@ export async function getAnalysisById(userId: string, id: string) {
 	return analysis ?? null;
 }
 
-export async function createAnalysisRecord(data: typeof analysisResult.$inferInsert) {
+type CreateAnalysisRecordInput = Omit<typeof analysisResult.$inferInsert, 'id'> & {
+	id?: string;
+};
+
+export async function createAnalysisRecord(data: CreateAnalysisRecordInput) {
 	const id = data.id || nanoid();
 	await db.insert(analysisResult).values({ ...data, id });
 	return id;
