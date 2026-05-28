@@ -39,7 +39,7 @@ const features = [
 		icon: ChatDots,
 		title: 'Interview Simulation',
 		description:
-			'AI-generated questions across Technical, Behavioral, Gap-Focused, and Company-Specific categories.',
+			'AI-generated questions across Technical, Behavioral, Gap-Focused, and Role-Specific categories.',
 	},
 ];
 

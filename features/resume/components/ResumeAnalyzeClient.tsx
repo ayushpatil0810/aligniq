@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 interface Job {
 	id: string;
 	title: string;
-	company: string;
 	level: string;
 	category: string;
 }
@@ -90,7 +89,6 @@ export function ResumeAnalyzeClient({ resumeId, jobs }: Props) {
 						id={`job-select-${job.id}`}
 					>
 						<p className="text-xs font-medium text-foreground leading-tight">{job.title}</p>
-						<p className="text-[11px] text-muted-foreground">{job.company}</p>
 						<div className="flex gap-1.5">
 							<span
 								className={cn(

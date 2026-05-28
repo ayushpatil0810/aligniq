@@ -40,15 +40,12 @@ export function JobFilter({ jobs }: Props) {
 	const filtered = useMemo(() => {
 		return jobs.filter((j) => {
 			const q = query.trim().toLowerCase();
-			const matchesQuery =
-				!q ||
-				(j.title?.toLowerCase() || '').includes(q) ||
-				(j.company?.toLowerCase() || '').includes(q);
+			const matchesSearch = q === '' || (j.title?.toLowerCase() || '').includes(q);
 
 			const matchesCategory = category === 'all' || (j.category?.toLowerCase() || '') === category;
 			const matchesLevel = level === 'all' || (j.level?.toLowerCase() || '') === level;
 
-			return matchesQuery && matchesCategory && matchesLevel;
+			return matchesSearch && matchesCategory && matchesLevel;
 		});
 	}, [jobs, query, category, level]);
 

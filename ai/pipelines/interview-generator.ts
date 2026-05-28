@@ -14,7 +14,7 @@ Question categories:
 - TECHNICAL: Role-specific technical depth questions
 - BEHAVIORAL: Situational/STAR-method questions targeting the candidate's experience
 - GAP-FOCUSED: Questions that will probe the candidate's identified skill gaps
-- COMPANY-SPECIFIC: Questions specific to this company's known culture and tech stack
+- ROLE-SPECIFIC: Questions specific to this role's requirements and best practices
 
 Guidelines:
 - Don't make questions generic — make them specific to this candidate's background
@@ -35,8 +35,7 @@ export async function generateInterviewQuestions({
 }: InterviewInput): Promise<InterviewSet> {
 	const context = JSON.stringify({
 		jobTitle: jobDescription.title,
-		company: jobDescription.company,
-		level: jobDescription.level,
+		description: jobDescription.description,
 		candidateSkills: parsedResume.technicalSkills,
 		candidateProjects: parsedResume.projects.slice(0, 3),
 		skillsMissing: analysis.skillsMissing.slice(0, 8),
@@ -51,7 +50,7 @@ export async function generateInterviewQuestions({
 			{ role: 'system', content: SYSTEM_PROMPT },
 			{
 				role: 'user',
-				content: `Generate 15-18 interview questions for this candidate applying for ${jobDescription.title} at ${jobDescription.company}.
+				content: `Generate 15-18 interview questions for this candidate applying for ${jobDescription.title}.
 
 Candidate & Job Context:
 ${context}

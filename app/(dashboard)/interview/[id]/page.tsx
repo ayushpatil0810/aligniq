@@ -24,7 +24,7 @@ export default async function InterviewPage({ params }: { params: Promise<{ id: 
 		<div className="space-y-6 animate-fade-in">
 			<PageHeader
 				title="Interview Prep"
-				description={`${questions.length} questions across Technical, Behavioral, Gap-Focused, and Company-Specific categories.`}
+				description={`${questions.length} questions across Technical, Behavioral, Gap-Focused, and Role-Specific categories.`}
 			/>
 			<InterviewClient questions={questions} />
 		</div>

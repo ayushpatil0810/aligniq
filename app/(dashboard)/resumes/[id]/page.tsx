@@ -21,7 +21,6 @@ export default async function ResumeDetailPage({ params }: { params: Promise<{ i
 		.select({
 			id: jobDescription.id,
 			title: jobDescription.title,
-			company: jobDescription.company,
 			level: jobDescription.level,
 			category: jobDescription.category,
 		})

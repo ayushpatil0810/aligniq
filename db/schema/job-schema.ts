@@ -28,7 +28,6 @@ export const jobDescription = pgTable(
 	{
 		id: text('id').primaryKey(),
 		title: text('title').notNull(),
-		company: text('company').notNull(),
 		category: jobCategoryEnum('category').notNull(),
 		level: jobLevelEnum('level').notNull(),
 		description: text('description').notNull(),

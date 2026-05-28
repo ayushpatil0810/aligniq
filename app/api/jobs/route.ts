@@ -46,7 +46,6 @@ export async function GET(req: NextRequest) {
 			conditions.push(
 				or(
 					ilike(jobDescription.title, `%${query}%`),
-					ilike(jobDescription.company, `%${query}%`),
 					ilike(jobDescription.description, `%${query}%`)
 				)!
 			);
@@ -56,7 +55,6 @@ export async function GET(req: NextRequest) {
 			.select({
 				id: jobDescription.id,
 				title: jobDescription.title,
-				company: jobDescription.company,
 				category: jobDescription.category,
 				level: jobDescription.level,
 				requirements: jobDescription.requirements,

@@ -25,8 +25,8 @@ const categoryConfig: Record<string, { label: string; icon: React.ElementType; c
 		icon: ChatDots,
 		color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
 	},
-	'company-specific': {
-		label: 'Company',
+	'role-specific': {
+		label: 'Role Specific',
 		icon: Buildings,
 		color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
 	},
@@ -38,7 +38,7 @@ const difficultyColors: Record<string, string> = {
 	hard: 'text-red-500',
 };
 
-const CATEGORIES = ['all', 'technical', 'behavioral', 'gap-focused', 'company-specific'] as const;
+const CATEGORIES = ['all', 'technical', 'behavioral', 'gap-focused', 'role-specific'] as const;
 
 function QuestionCard({ q, index }: { q: InterviewQuestion; index: number }) {
 	const [expanded, setExpanded] = useState(false);

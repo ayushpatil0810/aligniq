@@ -204,10 +204,11 @@ export function AnalysisClient({
 					<h3 className="mb-3 text-sm font-semibold text-foreground">Skill Radar</h3>
 					<ResponsiveContainer width="100%" height={200}>
 						<RadarChart data={radarData} margin={{ top: 0, right: 20, bottom: 0, left: 20 }}>
-							<PolarGrid stroke="hsl(var(--border))" />
+							<PolarGrid stroke="currentColor" className="text-muted-foreground/30" />
 							<PolarAngleAxis
 								dataKey="subject"
-								tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+								tick={{ fontSize: 10, fill: 'currentColor' }}
+								className="text-foreground"
 							/>
 							<Radar
 								dataKey="value"

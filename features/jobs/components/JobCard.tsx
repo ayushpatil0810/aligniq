@@ -29,7 +29,6 @@ export function JobCard({ job }: Props) {
 
 			<div className="space-y-1">
 				<h3 className="text-base font-semibold tracking-tight text-foreground">{job.title}</h3>
-				<p className="text-sm text-muted-foreground">{job.company}</p>
 			</div>
 
 			<div className="flex flex-wrap gap-2 mt-1">

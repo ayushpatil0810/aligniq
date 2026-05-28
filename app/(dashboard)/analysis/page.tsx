@@ -37,7 +37,7 @@ export default async function AnalysisListPage() {
 		analyses.map(async (a) => {
 			const [[job], [resumeRecord]] = await Promise.all([
 				db
-					.select({ title: jobDescription.title, company: jobDescription.company })
+					.select({ title: jobDescription.title })
 					.from(jobDescription)
 					.where(eq(jobDescription.id, a.jobId)),
 				db.select({ fileName: resume.fileName }).from(resume).where(eq(resume.id, a.resumeId)),
@@ -74,11 +74,6 @@ export default async function AnalysisListPage() {
 									<div>
 										<p className="text-sm font-medium text-foreground">
 											{a.job?.title ?? 'Unknown Role'}
-											{a.job?.company && (
-												<span className="ml-1.5 text-muted-foreground font-normal text-xs">
-													at {a.job.company}
-												</span>
-											)}
 										</p>
 										<p className="text-xs text-muted-foreground">
 											{a.resumeRecord?.fileName ?? 'Unknown resume'} ·{' '}

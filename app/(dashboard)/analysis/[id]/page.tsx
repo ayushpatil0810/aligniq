@@ -23,7 +23,6 @@ export default async function AnalysisPage({ params }: { params: Promise<{ id: s
 		db
 			.select({
 				title: jobDescription.title,
-				company: jobDescription.company,
 				level: jobDescription.level,
 			})
 			.from(jobDescription)
@@ -38,7 +37,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ id: s
 	return (
 		<div className="space-y-6 animate-fade-in">
 			<PageHeader
-				title={`${job?.title ?? 'Analysis'} at ${job?.company ?? ''}`}
+				title={`${job?.title ?? 'Analysis'}`}
 				description={`Resume: ${resumeRecord?.fileName ?? 'Unknown'} · ${job?.level ?? ''} level`}
 			/>
 			<AnalysisClient

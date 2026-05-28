@@ -55,7 +55,7 @@ export const interviewQuestion = pgTable(
 			Array<{
 				id: string;
 				question: string;
-				category: 'technical' | 'behavioral' | 'gap-focused' | 'company-specific';
+				category: 'technical' | 'behavioral' | 'gap-focused' | 'role-specific';
 				difficulty: 'easy' | 'medium' | 'hard';
 				hint: string;
 				sampleAnswer: string;

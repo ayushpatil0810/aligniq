@@ -35,7 +35,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 			<div className="flex items-start justify-between gap-4">
 				<PageHeader
 					title={job.title}
-					description={`${job.company} · ${job.level} · ${job.category}`}
+					description={`${job.level} · ${job.category}`}
 				/>
 				<Link href="/resumes">
 					<Button

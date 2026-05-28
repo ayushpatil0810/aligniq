@@ -25,7 +25,7 @@ export default async function InterviewListPage() {
 				.where(eq(analysisResult.id, i.analysisId));
 			if (!analysis) return { ...i, job: null };
 			const [job] = await db
-				.select({ title: jobDescription.title, company: jobDescription.company })
+				.select({ title: jobDescription.title })
 				.from(jobDescription)
 				.where(eq(jobDescription.id, analysis.jobId));
 			return { ...i, job };
@@ -66,11 +66,6 @@ export default async function InterviewListPage() {
 									<div>
 										<p className="text-sm font-medium text-foreground">
 											{i.job?.title ?? 'Interview Set'}{' '}
-											{i.job?.company && (
-												<span className="text-muted-foreground font-normal text-xs">
-													at {i.job.company}
-												</span>
-											)}
 										</p>
 										<p className="text-xs text-muted-foreground">
 											{questions.length} questions · {technicalCount} technical · {behavioralCount}{' '}

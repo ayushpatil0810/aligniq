@@ -36,8 +36,7 @@ export async function analyzeMatch({
 
 	const jobSummary = JSON.stringify({
 		title: jobDescription.title,
-		company: jobDescription.company,
-		level: jobDescription.level,
+		description: jobDescription.description,
 		category: jobDescription.category,
 		requirements: jobDescription.requirements,
 		descriptionExcerpt: jobDescription.description.slice(0, 3000),

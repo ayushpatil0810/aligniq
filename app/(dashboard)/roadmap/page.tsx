@@ -26,7 +26,7 @@ export default async function RoadmapListPage() {
 				.where(eq(analysisResult.id, r.analysisId));
 			if (!analysis) return { ...r, job: null };
 			const [job] = await db
-				.select({ title: jobDescription.title, company: jobDescription.company })
+				.select({ title: jobDescription.title })
 				.from(jobDescription)
 				.where(eq(jobDescription.id, analysis.jobId));
 			return { ...r, job };
@@ -62,11 +62,6 @@ export default async function RoadmapListPage() {
 								<div>
 									<p className="text-sm font-medium text-foreground">
 										{r.job?.title ?? 'Roadmap'}{' '}
-										{r.job?.company && (
-											<span className="text-muted-foreground font-normal text-xs">
-												at {r.job.company}
-											</span>
-										)}
 									</p>
 									<p className="text-xs text-muted-foreground">
 										Week {r.currentWeek} of 4 · {new Date(r.createdAt).toLocaleDateString()}

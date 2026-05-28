@@ -31,7 +31,6 @@ export async function generateRoadmap({
 }: RoadmapInput): Promise<RoadmapData> {
 	const context = JSON.stringify({
 		jobTitle: jobDescription.title,
-		company: jobDescription.company,
 		level: jobDescription.level,
 		skillsMissing: analysis.skillsMissing,
 		weaknesses: analysis.weaknesses,
@@ -50,7 +49,7 @@ export async function generateRoadmap({
 Context:
 ${context}
 
-Make it specific, realistic, and targeted at closing the identified gaps for the ${jobDescription.title} role at ${jobDescription.company}.`,
+Make it specific, realistic, and targeted at closing the identified gaps for the ${jobDescription.title} role.`,
 			},
 		],
 		response_format: zodResponseFormat(RoadmapSchema, 'roadmap'),

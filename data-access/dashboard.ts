@@ -43,7 +43,7 @@ export async function getRecentAnalysesWithJobs(userId: string) {
 	const jobIds = [...new Set(recentAnalyses.map((a) => a.jobId))];
 
 	const jobs = await db
-		.select({ id: jobDescription.id, title: jobDescription.title, company: jobDescription.company })
+		.select({ id: jobDescription.id, title: jobDescription.title })
 		.from(jobDescription)
 		.where(inArray(jobDescription.id, jobIds));
 
