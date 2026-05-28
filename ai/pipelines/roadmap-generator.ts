@@ -21,47 +21,50 @@ Daily practice should be small (15-30 min) and habit-forming.
 Each milestone should be a concrete, testable outcome.`;
 
 interface RoadmapInput {
-  analysis: MatchAnalysis;
-  jobDescription: JobDescription;
+	analysis: MatchAnalysis;
+	jobDescription: JobDescription;
 }
 
-export async function generateRoadmap({ analysis, jobDescription }: RoadmapInput): Promise<RoadmapData> {
-  const context = JSON.stringify({
-    jobTitle: jobDescription.title,
-    company: jobDescription.company,
-    level: jobDescription.level,
-    skillsMissing: analysis.skillsMissing,
-    weaknesses: analysis.weaknesses,
-    readinessLevel: analysis.readinessLevel,
-    matchScore: analysis.matchScore,
-  });
+export async function generateRoadmap({
+	analysis,
+	jobDescription,
+}: RoadmapInput): Promise<RoadmapData> {
+	const context = JSON.stringify({
+		jobTitle: jobDescription.title,
+		company: jobDescription.company,
+		level: jobDescription.level,
+		skillsMissing: analysis.skillsMissing,
+		weaknesses: analysis.weaknesses,
+		readinessLevel: analysis.readinessLevel,
+		matchScore: analysis.matchScore,
+	});
 
-  const response = await openai.chat.completions.create({
-    model: env.AI_MODEL_NAME,
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      {
-        role: 'user',
-        content: `Create a personalized 4-week study roadmap for this candidate.
+	const response = await openai.chat.completions.create({
+		model: env.AI_MODEL_NAME,
+		messages: [
+			{ role: 'system', content: SYSTEM_PROMPT },
+			{
+				role: 'user',
+				content: `Create a personalized 4-week study roadmap for this candidate.
 
 Context:
 ${context}
 
 Make it specific, realistic, and targeted at closing the identified gaps for the ${jobDescription.title} role at ${jobDescription.company}.`,
-      },
-    ],
-    response_format: zodResponseFormat(RoadmapSchema, 'roadmap'),
-    temperature: 0.3,
-  });
+			},
+		],
+		response_format: zodResponseFormat(RoadmapSchema, 'roadmap'),
+		temperature: 0.3,
+	});
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error('Roadmap generation failed — AI returned no output');
-  }
+	const content = response.choices[0]?.message?.content;
+	if (!content) {
+		throw new Error('Roadmap generation failed — AI returned no output');
+	}
 
-  try {
-    return RoadmapSchema.parse(JSON.parse(content));
-  } catch {
-    throw new Error('Roadmap generation failed — AI returned invalid structure');
-  }
+	try {
+		return RoadmapSchema.parse(JSON.parse(content));
+	} catch {
+		throw new Error('Roadmap generation failed — AI returned invalid structure');
+	}
 }

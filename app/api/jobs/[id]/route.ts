@@ -5,25 +5,19 @@ import { eq } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const { id } = await params;
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+	try {
+		const { id } = await params;
 
-    const [job] = await db
-      .select()
-      .from(jobDescription)
-      .where(eq(jobDescription.id, id));
+		const [job] = await db.select().from(jobDescription).where(eq(jobDescription.id, id));
 
-    if (!job) {
-      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
-    }
+		if (!job) {
+			return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+		}
 
-    return NextResponse.json({ job });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to fetch job';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+		return NextResponse.json({ job });
+	} catch (err) {
+		const message = err instanceof Error ? err.message : 'Failed to fetch job';
+		return NextResponse.json({ error: message }, { status: 500 });
+	}
 }

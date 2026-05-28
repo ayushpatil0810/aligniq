@@ -6,51 +6,45 @@ import { deleteResume } from '@/lib/supabase/storage';
 export const runtime = 'nodejs';
 
 // GET /api/resumes/[id]
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const session = await requireAuth();
-    const { id } = await params;
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+	try {
+		const session = await requireAuth();
+		const { id } = await params;
 
-    const found = await getResumeById(session.user.id, id);
+		const found = await getResumeById(session.user.id, id);
 
-    if (!found) {
-      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
-    }
+		if (!found) {
+			return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+		}
 
-    return NextResponse.json({ resume: found });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to fetch resume';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+		return NextResponse.json({ resume: found });
+	} catch (err) {
+		const message = err instanceof Error ? err.message : 'Failed to fetch resume';
+		return NextResponse.json({ error: message }, { status: 500 });
+	}
 }
 
 // DELETE /api/resumes/[id]
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const session = await requireAuth();
-    const { id } = await params;
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+	try {
+		const session = await requireAuth();
+		const { id } = await params;
 
-    const found = await getResumeById(session.user.id, id);
+		const found = await getResumeById(session.user.id, id);
 
-    if (!found) {
-      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
-    }
+		if (!found) {
+			return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+		}
 
-    // Delete from Supabase storage
-    await deleteResume(found.storagePath);
+		// Delete from Supabase storage
+		await deleteResume(found.storagePath);
 
-    // Delete DB record (cascades to analyses)
-    await deleteResumeRecord(session.user.id, id);
+		// Delete DB record (cascades to analyses)
+		await deleteResumeRecord(session.user.id, id);
 
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to delete resume';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+		return NextResponse.json({ success: true });
+	} catch (err) {
+		const message = err instanceof Error ? err.message : 'Failed to delete resume';
+		return NextResponse.json({ error: message }, { status: 500 });
+	}
 }

@@ -14,31 +14,31 @@ Guidelines:
 - Provide actionable, specific insights — not generic advice`;
 
 export async function parseResume(resumeText: string): Promise<ParsedResume> {
-  if (!resumeText || resumeText.trim().length < 50) {
-    throw new Error('Resume text is too short to parse meaningfully');
-  }
+	if (!resumeText || resumeText.trim().length < 50) {
+		throw new Error('Resume text is too short to parse meaningfully');
+	}
 
-  const response = await openai.chat.completions.create({
-    model: env.AI_MODEL_NAME,
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      {
-        role: 'user',
-        content: `Parse the following resume and extract all structured information:\n\n${resumeText.slice(0, 12000)}`,
-      },
-    ],
-    response_format: zodResponseFormat(ParsedResumeSchema, 'parsed_resume'),
-    temperature: 0.1,
-  });
+	const response = await openai.chat.completions.create({
+		model: env.AI_MODEL_NAME,
+		messages: [
+			{ role: 'system', content: SYSTEM_PROMPT },
+			{
+				role: 'user',
+				content: `Parse the following resume and extract all structured information:\n\n${resumeText.slice(0, 12000)}`,
+			},
+		],
+		response_format: zodResponseFormat(ParsedResumeSchema, 'parsed_resume'),
+		temperature: 0.1,
+	});
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error('Failed to parse resume — AI returned no output');
-  }
+	const content = response.choices[0]?.message?.content;
+	if (!content) {
+		throw new Error('Failed to parse resume — AI returned no output');
+	}
 
-  try {
-    return ParsedResumeSchema.parse(JSON.parse(content));
-  } catch {
-    throw new Error('Failed to parse resume — AI returned invalid structure');
-  }
+	try {
+		return ParsedResumeSchema.parse(JSON.parse(content));
+	} catch {
+		throw new Error('Failed to parse resume — AI returned invalid structure');
+	}
 }

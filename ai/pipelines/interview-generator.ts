@@ -23,54 +23,54 @@ Guidelines:
 - Mix difficulty levels appropriately for the seniority level`;
 
 interface InterviewInput {
-  parsedResume: ParsedResume;
-  analysis: MatchAnalysis;
-  jobDescription: JobDescription;
+	parsedResume: ParsedResume;
+	analysis: MatchAnalysis;
+	jobDescription: JobDescription;
 }
 
 export async function generateInterviewQuestions({
-  parsedResume,
-  analysis,
-  jobDescription,
+	parsedResume,
+	analysis,
+	jobDescription,
 }: InterviewInput): Promise<InterviewSet> {
-  const context = JSON.stringify({
-    jobTitle: jobDescription.title,
-    company: jobDescription.company,
-    level: jobDescription.level,
-    candidateSkills: parsedResume.technicalSkills,
-    candidateProjects: parsedResume.projects.slice(0, 3),
-    skillsMissing: analysis.skillsMissing.slice(0, 8),
-    weaknesses: analysis.weaknesses,
-    strengths: analysis.strengths,
-    matchScore: analysis.matchScore,
-  });
+	const context = JSON.stringify({
+		jobTitle: jobDescription.title,
+		company: jobDescription.company,
+		level: jobDescription.level,
+		candidateSkills: parsedResume.technicalSkills,
+		candidateProjects: parsedResume.projects.slice(0, 3),
+		skillsMissing: analysis.skillsMissing.slice(0, 8),
+		weaknesses: analysis.weaknesses,
+		strengths: analysis.strengths,
+		matchScore: analysis.matchScore,
+	});
 
-  const response = await openai.chat.completions.create({
-    model: env.AI_MODEL_NAME,
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      {
-        role: 'user',
-        content: `Generate 15-18 interview questions for this candidate applying for ${jobDescription.title} at ${jobDescription.company}.
+	const response = await openai.chat.completions.create({
+		model: env.AI_MODEL_NAME,
+		messages: [
+			{ role: 'system', content: SYSTEM_PROMPT },
+			{
+				role: 'user',
+				content: `Generate 15-18 interview questions for this candidate applying for ${jobDescription.title} at ${jobDescription.company}.
 
 Candidate & Job Context:
 ${context}
 
 Include questions across all 4 categories. Make gap-focused questions particularly insightful.`,
-      },
-    ],
-    response_format: zodResponseFormat(InterviewSetSchema, 'interview_set'),
-    temperature: 0.4,
-  });
+			},
+		],
+		response_format: zodResponseFormat(InterviewSetSchema, 'interview_set'),
+		temperature: 0.4,
+	});
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error('Interview generation failed — AI returned no output');
-  }
+	const content = response.choices[0]?.message?.content;
+	if (!content) {
+		throw new Error('Interview generation failed — AI returned no output');
+	}
 
-  try {
-    return InterviewSetSchema.parse(JSON.parse(content));
-  } catch {
-    throw new Error('Interview generation failed — AI returned invalid structure');
-  }
+	try {
+		return InterviewSetSchema.parse(JSON.parse(content));
+	} catch {
+		throw new Error('Interview generation failed — AI returned invalid structure');
+	}
 }

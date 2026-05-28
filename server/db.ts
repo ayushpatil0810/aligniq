@@ -8,17 +8,17 @@ type DbClient = ReturnType<typeof drizzle<typeof schema>>;
 const globalForDb = globalThis as unknown as { db: DbClient | undefined };
 
 function createDb(): DbClient {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('DATABASE_URL environment variable is not set');
-  const sql = neon(url);
-  return drizzle(sql, { schema });
+	const url = process.env.DATABASE_URL;
+	if (!url) throw new Error('DATABASE_URL environment variable is not set');
+	const sql = neon(url);
+	return drizzle(sql, { schema });
 }
 
 export const db: DbClient = new Proxy({} as DbClient, {
-  get(_target, prop) {
-    if (!globalForDb.db) {
-      globalForDb.db = createDb();
-    }
-    return globalForDb.db[prop as keyof DbClient];
-  },
+	get(_target, prop) {
+		if (!globalForDb.db) {
+			globalForDb.db = createDb();
+		}
+		return globalForDb.db[prop as keyof DbClient];
+	},
 });
