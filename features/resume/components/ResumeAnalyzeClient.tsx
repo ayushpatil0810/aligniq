@@ -5,7 +5,13 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+<<<<<<< HEAD
 import { ChartBar, ArrowRight, Briefcase, PencilSimple } from '@phosphor-icons/react';
+=======
+import { getAiHeaders } from '@/lib/utils/ai-config';
+import { useAiCheck } from '@/lib/hooks/useAiCheck';
+import { ChartBar, ArrowRight } from '@phosphor-icons/react';
+>>>>>>> a11318c4d497e6d8e07bd8af2d6cf91bfaa39cf9
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -40,8 +46,10 @@ export function ResumeAnalyzeClient({ resumeId, jobs }: Props) {
 	const [customJobDescription, setCustomJobDescription] = useState('');
 	const [isAnalyzing, setIsAnalyzing] = useState(false);
 	const router = useRouter();
+	const { checkAiKey, AiKeyModal } = useAiCheck();
 
 	async function handleAnalyze() {
+<<<<<<< HEAD
 		if (activeTab === 'library' && !selectedJobId) return;
 		if (activeTab === 'custom' && (!customJobTitle.trim() || !customJobDescription.trim())) {
 			toast.error('Please provide both title and description for the custom job.');
@@ -61,6 +69,19 @@ export function ResumeAnalyzeClient({ resumeId, jobs }: Props) {
 			}
 
 			const { data } = await axios.post('/api/analysis', payload);
+=======
+		if (!selectedJobId || !checkAiKey()) return;
+		setIsAnalyzing(true);
+		try {
+			const { data } = await axios.post(
+				'/api/analysis',
+				{
+					resumeId,
+					jobId: selectedJobId,
+				},
+				{ headers: getAiHeaders() }
+			);
+>>>>>>> a11318c4d497e6d8e07bd8af2d6cf91bfaa39cf9
 
 			let currentAnalysis = data;
 
@@ -69,7 +90,9 @@ export function ResumeAnalyzeClient({ resumeId, jobs }: Props) {
 
 				while (currentAnalysis.status === 'processing') {
 					await new Promise((resolve) => setTimeout(resolve, 3000));
-					const { data: pollData } = await axios.get(`/api/analysis/${currentAnalysis.id}`);
+					const { data: pollData } = await axios.get(`/api/analysis/${currentAnalysis.id}`, {
+						headers: getAiHeaders(),
+					});
 					currentAnalysis = pollData.analysis;
 				}
 			}
@@ -201,6 +224,7 @@ export function ResumeAnalyzeClient({ resumeId, jobs }: Props) {
 					)}
 				</Button>
 			</div>
+			<AiKeyModal />
 		</div>
 	);
 }

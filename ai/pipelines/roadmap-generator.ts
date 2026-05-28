@@ -1,9 +1,9 @@
-import { openai } from '@/ai/client';
+import { createOpenAIClient, getProviderCompatibleOptions, extractJsonFromText, type AiConfigOptions } from '@/ai/client';
 import env from '@/lib/utils/env';
 import { RoadmapSchema, type RoadmapData } from '@/ai/schemas/roadmap';
 import type { MatchAnalysis } from '@/ai/schemas/match-analysis';
 import type { JobDescription } from '@/db/schema';
-import { zodResponseFormat } from 'openai/helpers/zod';
+
 
 const SYSTEM_PROMPT = `You are a world-class learning coach and curriculum designer specializing in tech careers.
 
@@ -23,12 +23,15 @@ Each milestone should be a concrete, testable outcome.`;
 interface RoadmapInput {
 	analysis: MatchAnalysis;
 	jobDescription: JobDescription;
+	aiConfig?: AiConfigOptions & { modelName?: string | null };
 }
 
 export async function generateRoadmap({
 	analysis,
 	jobDescription,
+	aiConfig,
 }: RoadmapInput): Promise<RoadmapData> {
+	const openai = createOpenAIClient(aiConfig);
 	const context = JSON.stringify({
 		jobTitle: jobDescription.title,
 		level: jobDescription.level,
@@ -38,10 +41,16 @@ export async function generateRoadmap({
 		matchScore: analysis.matchScore,
 	});
 
+	const { response_format, systemPromptSuffix } = getProviderCompatibleOptions(
+		RoadmapSchema,
+		'learning_roadmap',
+		aiConfig
+	);
+
 	const response = await openai.chat.completions.create({
-		model: env.AI_MODEL_NAME,
+		model: aiConfig?.modelName || env.AI_MODEL_NAME,
 		messages: [
-			{ role: 'system', content: SYSTEM_PROMPT },
+			{ role: 'system', content: SYSTEM_PROMPT + systemPromptSuffix },
 			{
 				role: 'user',
 				content: `Create a personalized 4-week study roadmap for this candidate.
@@ -52,7 +61,7 @@ ${context}
 Make it specific, realistic, and targeted at closing the identified gaps for the ${jobDescription.title} role.`,
 			},
 		],
-		response_format: zodResponseFormat(RoadmapSchema, 'roadmap'),
+		response_format,
 		temperature: 0.3,
 	});
 
@@ -62,8 +71,9 @@ Make it specific, realistic, and targeted at closing the identified gaps for the
 	}
 
 	try {
-		return RoadmapSchema.parse(JSON.parse(content));
-	} catch {
+		const jsonString = extractJsonFromText(content);
+		return RoadmapSchema.parse(JSON.parse(jsonString));
+	} catch (err) {
 		throw new Error('Roadmap generation failed — AI returned invalid structure');
 	}
 }

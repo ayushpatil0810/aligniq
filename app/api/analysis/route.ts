@@ -78,12 +78,20 @@ export async function POST(req: NextRequest) {
 			status: 'processing',
 		});
 
+		// Extract AI settings from headers
+		const aiConfig = {
+			apiKey: req.headers.get('x-ai-api-key') || null,
+			baseUrl: req.headers.get('x-ai-base-url') || null,
+			modelName: req.headers.get('x-ai-model-name') || null,
+		};
+
 		// Run AI analysis in the background
 		after(async () => {
 			try {
 				const analysis = await analyzeMatch({
 					parsedResume: parsedResult.data,
 					jobDescription: jobRecord,
+					aiConfig,
 				});
 
 				// Update with results
