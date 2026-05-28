@@ -10,15 +10,26 @@ import {
 	getJobById,
 	createAnalysisRecord,
 	updateAnalysisResult,
+	createCustomJob,
 } from '@/data-access/analysis';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 
-const RequestSchema = z.object({
-	resumeId: z.string().min(1),
-	jobId: z.string().min(1),
-});
+const RequestSchema = z
+	.object({
+		resumeId: z.string().min(1),
+		jobId: z.string().optional(),
+		customJob: z
+			.object({
+				title: z.string().min(1),
+				description: z.string().min(10),
+			})
+			.optional(),
+	})
+	.refine((data) => data.jobId || data.customJob, {
+		message: 'Either jobId or customJob is required',
+	});
 
 // POST /api/analysis — trigger a new analysis
 export async function POST(req: NextRequest) {
@@ -27,7 +38,7 @@ export async function POST(req: NextRequest) {
 		const userId = session.user.id;
 
 		const body = await req.json();
-		const { resumeId, jobId } = RequestSchema.parse(body);
+		const { resumeId, jobId, customJob } = RequestSchema.parse(body);
 
 		// Verify resume belongs to user
 		const resumeRecord = await getResumeById(userId, resumeId);
@@ -46,8 +57,14 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: 'Resume data is malformed' }, { status: 500 });
 		}
 
+		let finalJobId = jobId;
+
+		if (customJob) {
+			finalJobId = await createCustomJob(userId, customJob.title, customJob.description);
+		}
+
 		// Fetch job
-		const jobRecord = await getJobById(jobId);
+		const jobRecord = await getJobById(finalJobId!);
 
 		if (!jobRecord) {
 			return NextResponse.json({ error: 'Job not found' }, { status: 404 });
@@ -57,7 +74,7 @@ export async function POST(req: NextRequest) {
 		const analysisId = await createAnalysisRecord({
 			userId,
 			resumeId,
-			jobId,
+			jobId: finalJobId!,
 			status: 'processing',
 		});
 

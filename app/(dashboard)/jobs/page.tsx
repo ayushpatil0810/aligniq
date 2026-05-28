@@ -1,6 +1,6 @@
 import { db } from '@/server/db';
 import { jobDescription } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { JobFilter } from '@/features/jobs/components/JobFilter';
 
@@ -8,7 +8,7 @@ export default async function JobsPage() {
 	const jobs = await db
 		.select()
 		.from(jobDescription)
-		.where(eq(jobDescription.isActive, true))
+		.where(and(eq(jobDescription.isActive, true), eq(jobDescription.isCustom, false)))
 		.limit(100);
 
 	return (

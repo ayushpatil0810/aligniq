@@ -45,3 +45,28 @@ export async function getJobById(id: string) {
 	const [job] = await db.select().from(jobDescription).where(eq(jobDescription.id, id));
 	return job ?? null;
 }
+
+export async function createCustomJob(
+	userId: string,
+	title: string,
+	description: string
+) {
+	const id = nanoid();
+	await db.insert(jobDescription).values({
+		id,
+		title,
+		description,
+		category: 'other',
+		level: 'mid',
+		requirements: {
+			technicalSkills: [],
+			softSkills: [],
+			experienceYears: 0,
+			education: 'Not Specified',
+			niceToHave: [],
+		},
+		isCustom: true,
+		userId: userId,
+	});
+	return id;
+}
