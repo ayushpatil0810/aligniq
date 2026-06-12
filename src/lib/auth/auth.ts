@@ -6,6 +6,11 @@ import { env } from '@/lib/utils/env';
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: 'pg', schema }),
-	baseURL: env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+	baseURL: env.BETTER_AUTH_URL,
+	trustedOrigins: [
+		'https://aligniq-seven.vercel.app',
+		...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+		...(env.NEXT_PUBLIC_APP_URL ? [env.NEXT_PUBLIC_APP_URL] : []),
+	],
 	emailAndPassword: { enabled: true },
 });
